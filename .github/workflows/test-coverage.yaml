@@ -1,0 +1,46 @@
+name: Test Coverage
+
+on:
+  push:
+    branches: '**'
+  pull_request:
+    branches: '**'
+
+env:
+  # Coverage threshold in percent
+  COVERAGE_THRESHOLD: 65
+
+jobs:
+  test-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.24'
+          
+      - name: Check dependencies
+        run: |
+          go mod tidy
+          if git diff --exit-code go.mod go.sum; then
+            echo "Зависимости актуальны."
+          else
+            echo "Требуется обновление зависимостей. Пожалуйста, выполните 'go mod tidy' локально и зафиксируйте изменения."
+            exit 1
+          fi
+          
+      - name: Run tests with coverage
+        run: |
+          go test -v -coverpkg=./... -coverprofile=profile.cov -run "TestCafeSearch|TestCafeCount" ./...
+          
+      - name: Check coverage threshold
+        run: |
+          COVERAGE=$(go tool cover -func=profile.cov | grep total: | awk '{print $3}' | sed 's/%//')
+          if [ "$(echo "$COVERAGE < $COVERAGE_THRESHOLD" | awk '{print ($1 < $3)}')" -eq 1 ]; then
+            echo "Покрытие тестами должно быть не ниже ${COVERAGE_THRESHOLD}% (текущее: ${COVERAGE}%)."
+            exit 1
+          else
+            echo "Текущее покрытие тестами составляет ${COVERAGE}% и соответствует требуемому уровню."
+          fi
