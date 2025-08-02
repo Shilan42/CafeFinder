@@ -144,7 +144,7 @@ func TestCafeCount(t *testing.T) {
 			}
 
 			// Разбиваем ответ на слайс по разделителю ","
-			res := strings.Split(string(body), ",")
+			res := strings.Split(strings.TrimSpace(string(body)), ",")
 
 			// Проверяем, что количество элементов соответствует ожидаемому
 			assert.Equal(t, v.want, len(res))
@@ -198,8 +198,7 @@ func TestCafeSearch(t *testing.T) {
 
 			// Проверяем каждый найденный результат
 			for _, name := range res {
-				trimmedName := strings.TrimSpace(name)
-				if strings.Contains(strings.ToLower(trimmedName), strings.ToLower(v.search)) {
+				if strings.Contains(strings.ToLower(name), strings.ToLower(v.search)) {
 					assert.Equal(t, v.wantCount, len(res))
 				}
 			}
