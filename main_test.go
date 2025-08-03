@@ -23,6 +23,18 @@ func checkStatus(t *testing.T, response *httptest.ResponseRecorder) {
 }
 
 /*
+createTestRequest:
+Назначение: Вспомогательная функция для создания тестового запроса
+Описание: Создает объект для записи ответа, формируеет URL запроса с нужными параметрами, обрабатывает и возращает запрос
+*/
+func createTestRequest(t *testing.T, method, url string, handler http.HandlerFunc) *httptest.ResponseRecorder {
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(method, url, nil)
+	handler.ServeHTTP(response, request)
+	return response
+}
+
+/*
 TestCafeNegative:
 Назначение: тестирование негативных сценариев
 Описание: проверяет обработку некорректных запросов, которые должны возвращать ошибки
@@ -45,13 +57,7 @@ func TestCafeNegative(t *testing.T) {
 	// Итерируемся по всем тестовым запросам
 	for _, v := range requests {
 		// Создаем объект для записи ответа
-		response := httptest.NewRecorder()
-
-		// Создаем тестовый GET-запрос
-		req := httptest.NewRequest("GET", v.request, nil)
-
-		// Обрабатываем запрос
-		handler.ServeHTTP(response, req)
+		response := createTestRequest(t, "GET", v.request, handler)
 
 		// Проверяем статус и сообщение об ошибке
 		assert.Equal(t, v.status, response.Code)
@@ -78,13 +84,7 @@ func TestCafeWhenOk(t *testing.T) {
 	// Итерируемся по всем тестовым запросам
 	for _, v := range requests {
 		// Создаем объект для записи ответа
-		response := httptest.NewRecorder()
-
-		// Создаем тестовый GET-запрос
-		req := httptest.NewRequest("GET", v, nil)
-
-		// Обрабатываем запрос
-		handler.ServeHTTP(response, req)
+		response := createTestRequest(t, "GET", v, handler)
 
 		// Проверяем статус ответа
 		checkStatus(t, response)
@@ -117,13 +117,7 @@ func TestCafeCount(t *testing.T) {
 		for city := range cafeList {
 
 			// Создаем объект для записи ответа
-			response := httptest.NewRecorder()
-
-			// Формируем URL запроса с нужными параметрами
-			req := httptest.NewRequest("GET", fmt.Sprintf("/cafe?count=%d&city=%s", v.count, city), nil)
-
-			// Обрабатываем запрос
-			handler.ServeHTTP(response, req)
+			response := createTestRequest(t, "GET", fmt.Sprintf("/cafe?count=%d&city=%s", v.count, city), handler)
 
 			// Проверяем статус ответа
 			checkStatus(t, response)
@@ -178,13 +172,7 @@ func TestCafeSearch(t *testing.T) {
 		for _, v := range requests {
 
 			// Создаем объект для записи ответа
-			response := httptest.NewRecorder()
-
-			// Формируем URL запроса с нужными параметрами
-			req := httptest.NewRequest("GET", fmt.Sprintf("/cafe?city=%s&search=%s", city, v.search), nil)
-
-			// Обрабатываем запрос
-			handler.ServeHTTP(response, req)
+			response := createTestRequest(t, "GET", fmt.Sprintf("/cafe?city=%s&search=%s", city, v.search), handler)
 
 			// Проверяем статус ответа
 			checkStatus(t, response)
